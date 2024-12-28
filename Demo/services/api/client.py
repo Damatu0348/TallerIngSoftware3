@@ -44,3 +44,5 @@ class APIClient:
         except requests.exceptions.RequestException as e:
             # Manejar errores de conexión o de la API
             return {"msg": "Error al conectar con el servidor. Intente nuevamente más tarde."}
+
+

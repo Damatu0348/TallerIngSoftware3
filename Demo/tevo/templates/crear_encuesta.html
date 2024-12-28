@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Nueva Encuesta</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        textarea,
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .options-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .option-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-add {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background-color: #45a049;
+        }
+
+        .btn-remove {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 15px;
+        }
+
+        .btn-remove:hover {
+            background-color: #da190b;
+        }
+
+        .btn-submit {
+            background-color: #2196F3;
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        .btn-submit:hover {
+            background-color: #1976D2;
+        }
+
+        .error {
+            color: #f56558;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Crear Nueva Encuesta</h1>
+        <form id="surveyForm" onsubmit="return validateForm(event)">
+            <div class="form-group">
+                <label for="title">Título:</label>
+                <input type="text" id="title" name="title" placeholder="Ingrese el título de la encuesta">
+                <div id="titleError" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Descripción:</label>
+                <textarea id="description" name="description" placeholder="Ingrese la descripción de la encuesta"></textarea>
+                <div id="descriptionError" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="startDate">Fecha de inicio:</label>
+                <input type="datetime-local" id="startDate" name="startDate">
+                <div id="startDateError" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="endDate">Fecha de fin:</label>
+                <input type="datetime-local" id="endDate" name="endDate">
+                <div id="endDateError" class="error"></div>
+            </div>
+
+            <div class="options-container">
+                <label>Opciones de respuesta:</label>
+                <div id="optionsContainer">
+                    <div class="option-group">
+                        <input type="text" class="option" placeholder="Opción 1">
+                        <button type="button" class="btn btn-remove" onclick="removeOption(this)">X</button>
+                    </div>
+                    <div class="option-group">
+                        <input type="text" class="option" placeholder="Opción 2">
+                        <button type="button" class="btn btn-remove" onclick="removeOption(this)">X</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-add" onclick="addOption()">+ Agregar opción</button>
+                <div id="optionsError" class="error"></div>
+            </div>
+
+            <button type="submit" class="btn btn-submit">Crear Encuesta</button>
+            <div id="generalError" class="error"></div>
+        </form>
+    </div>
+
+    <script>
+        function addOption() {
+            const container = document.getElementById('optionsContainer');
+            const optionCount = container.children.length + 1;
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option-group';
+            optionDiv.innerHTML = `
+                <input type="text" class="option" placeholder="Opción ${optionCount}">
+                <button type="button" class="btn btn-remove" onclick="removeOption(this)">X</button>
+            `;
+            container.appendChild(optionDiv);
+        }
+
+        function removeOption(button) {
+            const optionsContainer = document.getElementById('optionsContainer');
+            if (optionsContainer.children.length > 2) {
+                button.parentElement.remove();
+            }
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function clearErrors() {
+            const errors = document.getElementsByClassName('error');
+            for (let error of errors) {
+                error.style.display = 'none';
+            }
+        }
+
+        function validateForm(event) {
+            event.preventDefault();
+            clearErrors();
+            let isValid = true;
+
+            // Validar campos vacíos
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!title || !description || !startDate || !endDate) {
+                showError('generalError', 'Todos los campos son obligatorios');
+                isValid = false;
+            }
+
+            // Validar fechas
+            const now = new Date();
+            const startDateTime = new Date(startDate);
+            const endDateTime = new Date(endDate);
+
+            if (startDateTime < now) {
+                showError('startDateError', 'La fecha de inicio debe ser mayor o igual a la fecha actual');
+                isValid = false;
+            }
+
+            if (endDateTime <= startDateTime) {
+                showError('endDateError', 'La fecha de fin debe ser mayor a la fecha de inicio');
+                isValid = false;
+            }
+
+            // Validar opciones
+            const options = document.getElementsByClassName('option');
+            let validOptions = 0;
+            for (let option of options) {
+                if (option.value.trim()) {
+                    validOptions++;
+                }
+            }
+
+            if (validOptions < 2) {
+                showError('optionsError', 'Debe existir al menos dos opciones de respuesta');
+                isValid = false;
+            }
+
+            if (isValid) {
+                // Aquí iría el código para enviar el formulario al servidor
+                console.log('Formulario válido, enviando datos...');
+            }
+
+            return false; // Prevenir envío del formulario
+        }
+
+        // Establecer la fecha mínima como la fecha actual
+        const now = new Date();
+        const nowStr = now.toISOString().slice(0, 16);
+        document.getElementById('startDate').min = nowStr;
+        document.getElementById('endDate').min = nowStr;
+    </script>
+</body>
+</html>
