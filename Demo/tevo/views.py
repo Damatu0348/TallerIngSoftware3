@@ -236,4 +236,4 @@ def crea_encuesta(request):
                     'errors': ["Error al crear la encuesta. Por favor, intente nuevamente."]
                 }, status=500)
 
-    return render(request, 'crear_encuesta/')
+    return render(request, 'crear_encuesta.html')
