@@ -166,6 +166,74 @@ def role_required(allowed_roles):
 def admin_only_view(request):
     return render(request, 'creador_home.html')
 
+def crea_encuesta(request):
+    if request.method == 'POST':
+        form = crea_encuesta(request.POST)
+        if form.is_valid():
+            # Obtener datos del formulario
+            title = form.cleaned_data['title']
+            description = form.cleaned_data['description']
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+            options = request.POST.getlist('options[]')
 
-def crear_encuesta():
-    print("create registro")
+            # Validaciones
+            errors = []
+            
+            # Validar que todos los campos estén presentes
+            if not all([title, description, start_date, end_date, options]):
+                errors.append("Todos los campos son obligatorios")
+
+            # Validar fechas
+            now = timezone.now()
+            if start_date < now:
+                errors.append("La fecha de inicio debe ser mayor o igual a la fecha actual")
+            
+            if end_date <= start_date:
+                errors.append("La fecha de fin debe ser mayor a la fecha de inicio")
+
+            # Validar opciones de respuesta
+            valid_options = [opt for opt in options if opt.strip()]
+            if len(valid_options) < 2:
+                errors.append("Debe existir al menos dos opciones de respuesta")
+
+            # Validar título único
+            if crea_encuesta.objects.filter(title=title).exists():
+                errors.append("Ya existe una encuesta con este título")
+
+            if errors:
+                return JsonResponse({
+                    'success': False,
+                    'errors': errors
+                }, status=400)
+
+            try:
+                # Crear la encuesta
+                survey = Survey.objects.create(
+                    title=title,
+                    description=description,
+                    start_date=start_date,
+                    end_date=end_date,
+                    created_by=request.user
+                )
+
+                # Crear las opciones de respuesta
+                for option_text in valid_options:
+                    SurveyOption.objects.create(
+                        survey=survey,
+                        text=option_text
+                    )
+
+                messages.success(request, "Encuesta creada exitosamente")
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': f'/survey/{survey.id}/'
+                })
+
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'errors': ["Error al crear la encuesta. Por favor, intente nuevamente."]
+                }, status=500)
+
+    return render(request, 'crear_encuesta/')
